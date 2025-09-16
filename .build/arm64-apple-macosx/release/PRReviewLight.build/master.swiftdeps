@@ -1,8 +1,0 @@
-version: "Apple Swift version 6.0.3 (swiftlang-6.0.3.1.10 clang-1600.0.30.1)"
-options: "33235dab289d959870dfbd0614d7783320d88bdedad38c51cd6f6c38883739a9"
-build_start_time: [1757982757, 704090000]
-build_end_time: [1757982798, 718672000]
-inputs:
-  "/Users/adam/source/PRReviewLight/GitHubService.swift": [1757918604, 661864345]
-  "/Users/adam/source/PRReviewLight/PRReviewLight.swift": [1757981044, 930498069]
-  "/Users/adam/source/PRReviewLight/SettingsWindow.swift": [1757981316, 949638128]
