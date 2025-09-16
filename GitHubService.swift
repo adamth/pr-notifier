@@ -9,11 +9,13 @@ struct PullRequest: Codable {
     let additions: Int?
     let deletions: Int?
     let changedFiles: Int?
+    let reviewRequestCount: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, title, user, number, additions, deletions
         case htmlURL = "html_url"
         case changedFiles = "changed_files"
+        case reviewRequestCount
     }
     
     struct User: Codable {
@@ -177,11 +179,81 @@ class GitHubService {
 
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
-            let detailedPR = try JSONDecoder().decode(PullRequest.self, from: data)
-            print("📈 Fetched detailed info for PR #\(pr.number): +\(detailedPR.additions ?? 0)/-\(detailedPR.deletions ?? 0)")
+            var detailedPR = try JSONDecoder().decode(PullRequest.self, from: data)
+
+            // Fetch review request count
+            let reviewRequestCount = await fetchReviewRequestCount(owner: owner, repo: repo, prNumber: pr.number)
+
+            // Create a new PR with the review request count
+            detailedPR = PullRequest(
+                id: detailedPR.id,
+                title: detailedPR.title,
+                htmlURL: detailedPR.htmlURL,
+                user: detailedPR.user,
+                number: detailedPR.number,
+                additions: detailedPR.additions,
+                deletions: detailedPR.deletions,
+                changedFiles: detailedPR.changedFiles,
+                reviewRequestCount: reviewRequestCount
+            )
+
+            print("📈 Fetched detailed info for PR #\(pr.number): +\(detailedPR.additions ?? 0)/-\(detailedPR.deletions ?? 0), requests: \(reviewRequestCount)")
             return detailedPR
         } catch {
             print("❌ Failed to fetch detailed PR info for #\(pr.number): \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private func fetchReviewRequestCount(owner: String, repo: String, prNumber: Int) async -> Int {
+        guard let token = token else {
+            return 1 // Default to 1 if we can't check
+        }
+
+        // Fetch current user to get our username
+        guard let currentUser = await getCurrentUsername() else {
+            return 1
+        }
+
+        guard let url = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/issues/\(prNumber)/timeline") else {
+            return 1
+        }
+
+        var request = URLRequest(url: url)
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let timeline = try JSONDecoder().decode([TimelineEvent].self, from: data)
+
+            // Count review_requested events for the current user
+            let requestCount = timeline.filter { event in
+                event.event == "review_requested" &&
+                event.requestedReviewer?.login == currentUser
+            }.count
+
+            return max(requestCount, 1) // At least 1 since we're currently requested
+        } catch {
+            print("❌ Failed to fetch timeline for PR #\(prNumber): \(error.localizedDescription)")
+            return 1
+        }
+    }
+
+    private func getCurrentUsername() async -> String? {
+        guard let token = token else { return nil }
+
+        guard let url = URL(string: "\(baseURL)/user") else { return nil }
+
+        var request = URLRequest(url: url)
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let user = try JSONDecoder().decode(GitHubUser.self, from: data)
+            return user.login
+        } catch {
             return nil
         }
     }
@@ -239,6 +311,16 @@ class GitHubService {
 
 struct GitHubSearchResult: Codable {
     let items: [PullRequest]
+}
+
+struct TimelineEvent: Codable {
+    let event: String
+    let requestedReviewer: PullRequest.User?
+
+    enum CodingKeys: String, CodingKey {
+        case event
+        case requestedReviewer = "requested_reviewer"
+    }
 }
 
 struct GitHubUser: Codable {

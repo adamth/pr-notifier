@@ -161,18 +161,30 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, @unch
             for pr in pendingReviews {
                 let isSnoozed = snoozedReviews.contains(pr.id)
 
-                // Show line changes if available, otherwise just show the title
+                // Show line changes and review count if available
                 let title: String
+                var titleComponents: [String] = []
+
+                // Add base title with emoji
+                let baseTitle = isSnoozed ? "💤 \(pr.title)" : "🔍 \(pr.title)"
+                titleComponents.append(baseTitle)
+
+                // Add line changes if available
                 if let additions = pr.additions, let deletions = pr.deletions {
                     let formatter = NumberFormatter()
                     formatter.numberStyle = .decimal
                     let additionsStr = formatter.string(from: NSNumber(value: additions)) ?? "\(additions)"
                     let deletionsStr = formatter.string(from: NSNumber(value: deletions)) ?? "\(deletions)"
-                    let changes = "+\(additionsStr)/-\(deletionsStr)"
-                    title = isSnoozed ? "💤 \(pr.title) (\(changes))" : "🔍 \(pr.title) (\(changes))"
-                } else {
-                    title = isSnoozed ? "💤 \(pr.title)" : "🔍 \(pr.title)"
+                    titleComponents.append("(+\(additionsStr)/-\(deletionsStr))")
                 }
+
+                // Add review request count if > 1
+                if let requestCount = pr.reviewRequestCount, requestCount > 1 {
+                    let ordinal = getOrdinalString(requestCount)
+                    titleComponents.append("[\(ordinal) review]")
+                }
+
+                title = titleComponents.joined(separator: " ")
 
                 let prItem = NSMenuItem(title: title, action: #selector(openPR(_:)), keyEquivalent: "")
                 prItem.representedObject = pr
@@ -361,8 +373,13 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, @unch
 
         return shouldUseWhite ? NSColor.white : NSColor.black
     }
-    
-    
+
+    private func getOrdinalString(_ number: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .ordinal
+        return formatter.string(from: NSNumber(value: number)) ?? "\(number)th"
+    }
+
     // MARK: - SettingsDelegate
     func tokenDidChange() {
         print("🔄 Token changed, checking for reviews immediately...")
