@@ -35,23 +35,48 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, @unch
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("🚀 PR Review Light starting up...")
-        
+
         setupStatusItem()
         setupMenu()
-        
+
         githubService = GitHubService()
         print("📡 GitHub service initialized")
-        
-        
+
+        // Listen for appearance changes
+        DistributedNotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appearanceChanged),
+            name: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil
+        )
+
+        // Also listen for system appearance notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appearanceChanged),
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
+
         // Check for pending reviews immediately and then every minute
         print("🔍 Starting initial check for pending reviews...")
         checkForPendingReviews()
-        
+
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
             print("⏰ Periodic check: Looking for pending reviews...")
             self.checkForPendingReviews()
         }
         print("⏲️  Timer set to check every minute")
+    }
+
+    @objc private func appearanceChanged() {
+        print("🎨 Appearance changed notification received!")
+
+        // Force refresh appearance detection
+        DispatchQueue.main.async {
+            print("🎨 Updating icon on main queue...")
+            self.updateStatusItemAppearance()
+        }
     }
     
     private func setupStatusItem() {
@@ -247,51 +272,82 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, @unch
     // MARK: - Badge Creation
     private func createBadgedIcon(count: Int) -> NSImage {
         let baseIcon = NSImage(systemSymbolName: "curlybraces.square.fill", accessibilityDescription: "GitHub Reviews")!
-        let config = NSImage.SymbolConfiguration(pointSize: 20, weight: .medium) // Even larger base icon
+        let config = NSImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         let configuredIcon = baseIcon.withSymbolConfiguration(config) ?? baseIcon
-        
+
         // Create a new image sized for full icon + badge space
         let size = NSSize(width: 26, height: 22)
         let badgedImage = NSImage(size: size)
-        
+
         badgedImage.lockFocus()
-        
-        // Draw the base icon using maximum available space
-        NSColor.systemOrange.setFill()
-        let iconRect = NSRect(x: 0, y: 0, width: 20, height: 20) // Even larger, no padding
+
+        // Draw the icon with proper color for dark/light mode
+        let iconColor = getMenuBarIconColor()
+        let iconRect = NSRect(x: 0, y: 0, width: 20, height: 20)
+
+        // First draw the SF Symbol in black to create a mask
         configuredIcon.draw(in: iconRect)
-        
+
+        // Then overlay the desired color using source-in blending
+        iconColor.setFill()
+        iconRect.fill(using: .sourceIn)
+
         // Only show badge if count > 0
         if count > 0 {
             let badgeText = count > 99 ? "99+" : String(count)
             let badgeSize = badgeText.count <= 2 ? 12.0 : 14.0
-            // Position badge at top-right (same location as before)
             let badgeX = size.width - badgeSize - 2
             let badgeY = size.height - badgeSize - 1
-            
+
             // Draw red badge background
             NSColor.systemRed.setFill()
             let badgePath = NSBezierPath(ovalIn: NSRect(x: badgeX, y: badgeY, width: badgeSize, height: badgeSize))
             badgePath.fill()
-            
+
             // Draw white text on badge
             let fontSize: CGFloat = badgeText.count <= 2 ? 8 : 7
             let textAttributes: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
                 .foregroundColor: NSColor.white
             ]
-            
+
             let textSize = badgeText.size(withAttributes: textAttributes)
             let textX = badgeX + (badgeSize - textSize.width) / 2
             let textY = badgeY + (badgeSize - textSize.height) / 2
-            
+
             badgeText.draw(at: NSPoint(x: textX, y: textY), withAttributes: textAttributes)
         }
-        
+
         badgedImage.unlockFocus()
         badgedImage.isTemplate = false
-        
+
         return badgedImage
+    }
+
+    private func getMenuBarIconColor() -> NSColor {
+        print("🎨 getMenuBarIconColor() called")
+
+        // Try multiple ways to detect dark mode
+        let userDefaultsStyle = UserDefaults.standard.string(forKey: "AppleInterfaceStyle")
+        let isDarkModeUD = userDefaultsStyle == "Dark"
+
+        let currentAppearance = NSAppearance.current
+        let effectiveAppearance = NSApp.effectiveAppearance
+
+        print("🎨 UserDefaults AppleInterfaceStyle: \(userDefaultsStyle ?? "nil")")
+        print("🎨 NSAppearance.current: \(currentAppearance?.name.rawValue ?? "nil")")
+        print("🎨 NSApp.effectiveAppearance: \(effectiveAppearance.name.rawValue)")
+
+        // Check if current appearance is dark
+        let isDarkModeCurrent = currentAppearance?.name == .darkAqua
+        let isDarkModeEffective = effectiveAppearance.name == .darkAqua
+
+        print("🎨 isDarkModeUD: \(isDarkModeUD), isDarkModeCurrent: \(isDarkModeCurrent), isDarkModeEffective: \(isDarkModeEffective)")
+
+        let shouldUseWhite = isDarkModeUD || isDarkModeCurrent == true || isDarkModeEffective
+        print("🎨 Final decision: using \(shouldUseWhite ? "WHITE" : "BLACK") icon")
+
+        return shouldUseWhite ? NSColor.white : NSColor.black
     }
     
     
