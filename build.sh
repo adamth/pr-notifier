@@ -36,6 +36,17 @@ mkdir -p "$RESOURCES_DIR"
 cp .build/release/PRReviewLight "$MACOS_DIR/"
 chmod +x "$MACOS_DIR/PRReviewLight"
 
+# Copy app icon if it exists
+if [ -f "AppIcon.png" ]; then
+    echo "📱 Adding app icon..."
+    cp AppIcon.png "$RESOURCES_DIR/"
+elif [ -f "AppIcon.icns" ]; then
+    echo "📱 Adding app icon..."
+    cp AppIcon.icns "$RESOURCES_DIR/"
+else
+    echo "⚠️  No app icon found (AppIcon.png or AppIcon.icns)"
+fi
+
 # Create Info.plist
 cat > "$CONTENTS_DIR/Info.plist" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -66,6 +77,8 @@ cat > "$CONTENTS_DIR/Info.plist" << 'EOF'
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>© 2024 PR Review Light</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
 </dict>
 </plist>
 EOF

@@ -1,10 +1,9 @@
 import Cocoa
 import Foundation
 import QuartzCore
-import UserNotifications
 
 @main
-class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUserNotificationCenterDelegate, @unchecked Sendable {
+class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, @unchecked Sendable {
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
     private var timer: Timer?
@@ -13,7 +12,6 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUse
     private var snoozedReviews: Set<Int> = []
     private var lastCheckTime: Date = Date()
     private var settingsWindow: SettingsWindow?
-    private var notificationsEnabled: Bool = UserDefaults.standard.object(forKey: "notificationsEnabled") == nil ? true : UserDefaults.standard.bool(forKey: "notificationsEnabled")
     
     static func main() {
         // Set up logging to application support directory (no permission needed)
@@ -44,8 +42,6 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUse
         githubService = GitHubService()
         print("📡 GitHub service initialized")
         
-        // Setup notification system
-        setupNotificationSystem()
         
         // Check for pending reviews immediately and then every minute
         print("🔍 Starting initial check for pending reviews...")
@@ -182,9 +178,6 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUse
             }
 
             DispatchQueue.main.async {
-                // Check for new PR reviews to notify about
-                let oldPRIds = Set(self.pendingReviews.map(\.id))
-                let newPRs = reviews.filter { !oldPRIds.contains($0.id) }
 
                 // Remove snoozed reviews that are no longer pending
                 let currentPRIds = Set(reviews.map(\.id))
@@ -198,20 +191,6 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUse
                 self.updateStatusItemAppearance()
                 self.updateMenu()
 
-                // Send notifications for new PRs
-                if !newPRs.isEmpty {
-                    print("🔔 Found \(newPRs.count) new PRs for notification")
-                    if self.notificationsEnabled {
-                        for pr in newPRs {
-                            print("🔔 Triggering notification for: \(pr.title)")
-                            self.sendNotification(for: pr)
-                        }
-                    } else {
-                        print("🔕 Notifications disabled in settings")
-                    }
-                } else {
-                    print("📭 No new PRs to notify about")
-                }
             }
         }
     }
@@ -264,178 +243,6 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUse
         NSApplication.shared.terminate(nil)
     }
     
-    // MARK: - Notification System
-    private func setupNotificationSystem() {
-        let center = UNUserNotificationCenter.current()
-        center.delegate = self
-
-        print("🔔 Setting up notification system...")
-
-        // Check current status first
-        center.getNotificationSettings { [weak self] settings in
-            DispatchQueue.main.async {
-                switch settings.authorizationStatus {
-                case .notDetermined:
-                    print("🔔 Requesting notification permissions...")
-                    // Request authorization on first launch
-                    center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-                        DispatchQueue.main.async {
-                            if let error = error {
-                                print("❌ Notification permission error: \(error.localizedDescription)")
-                                return
-                            }
-
-                            if granted {
-                                print("✅ Notification permissions granted")
-                                self?.setupNotificationCategories()
-                            } else {
-                                print("⚠️ Notification permissions denied by user")
-                            }
-                            self?.checkNotificationSettings()
-                        }
-                    }
-
-                case .denied:
-                    print("⚠️ Notifications previously denied - user can enable in System Settings")
-                    self?.checkNotificationSettings()
-
-                case .authorized, .provisional, .ephemeral:
-                    print("✅ Notifications already authorized")
-                    self?.setupNotificationCategories()
-                    self?.checkNotificationSettings()
-
-                @unknown default:
-                    print("⚠️ Unknown notification authorization status")
-                    self?.checkNotificationSettings()
-                }
-            }
-        }
-    }
-
-    private func setupNotificationCategories() {
-        let openAction = UNNotificationAction(
-            identifier: "OPEN_PR",
-            title: "Open PR",
-            options: [.foreground]
-        )
-
-        let snoozeAction = UNNotificationAction(
-            identifier: "SNOOZE_PR",
-            title: "Snooze 1hr",
-            options: []
-        )
-
-        let reviewCategory = UNNotificationCategory(
-            identifier: "PR_REVIEW_REQUEST",
-            actions: [openAction, snoozeAction],
-            intentIdentifiers: [],
-            options: [.customDismissAction]
-        )
-
-        UNUserNotificationCenter.current().setNotificationCategories([reviewCategory])
-        print("✅ Notification categories configured")
-    }
-
-    private func checkNotificationSettings() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                let status = settings.authorizationStatus
-                print("📱 Notification authorization: \(status.rawValue)")
-                print("📱 Alert setting: \(settings.alertSetting.rawValue)")
-
-                switch status {
-                case .denied:
-                    print("⚠️ Notifications denied - user must enable in System Preferences")
-                case .notDetermined:
-                    print("⚠️ Notification permission not yet requested")
-                case .authorized:
-                    print("✅ Notifications fully authorized")
-                case .provisional:
-                    print("📱 Provisional notification authorization")
-                case .ephemeral:
-                    print("📱 Ephemeral notification authorization")
-                @unknown default:
-                    print("⚠️ Unknown notification authorization status")
-                }
-            }
-        }
-    }
-
-    private func sendNotification(for pr: PullRequest) {
-        guard notificationsEnabled else {
-            print("🔔 Notifications disabled in app settings - skipping")
-            return
-        }
-
-        // Always check current authorization before sending
-        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
-            guard settings.authorizationStatus == .authorized else {
-                print("🔔 Cannot send notification - system permissions not granted")
-                DispatchQueue.main.async {
-                    if settings.authorizationStatus == .denied {
-                        self?.promptForNotificationSettings()
-                    }
-                }
-                return
-            }
-
-            print("🔔 Sending notification for: \(pr.title)")
-
-            let content = UNMutableNotificationContent()
-            content.title = "New PR Review Request"
-            content.body = pr.title
-            content.subtitle = "By \(pr.user.login)"
-            content.sound = .default
-            content.categoryIdentifier = "PR_REVIEW_REQUEST"
-
-            // Set badge to total pending count
-            if let totalCount = self?.pendingReviews.count {
-                content.badge = NSNumber(value: totalCount)
-            }
-
-            // Store data for action handling
-            content.userInfo = [
-                "prURL": pr.htmlURL,
-                "prID": pr.id,
-                "prNumber": pr.number,
-                "prTitle": pr.title,
-                "author": pr.user.login
-            ]
-
-            let request = UNNotificationRequest(
-                identifier: "pr-review-\(pr.id)",
-                content: content,
-                trigger: nil
-            )
-
-            UNUserNotificationCenter.current().add(request) { error in
-                if let error = error {
-                    print("❌ Failed to send notification: \(error.localizedDescription)")
-                } else {
-                    print("✅ Notification sent successfully for PR #\(pr.number)")
-                }
-            }
-        }
-    }
-
-    private func promptForNotificationSettings() {
-        let alert = NSAlert()
-        alert.messageText = "Enable Notifications"
-        alert.informativeText = "To receive PR review alerts, enable notifications in System Settings > Notifications > PR Review Light"
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Open Settings")
-        alert.addButton(withTitle: "Later")
-
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            // Open System Settings/Preferences
-            if #available(macOS 13.0, *) {
-                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!)
-            } else {
-                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!)
-            }
-        }
-    }
     
     // MARK: - Badge Creation
     private func createBadgedIcon(count: Int) -> NSImage {
@@ -487,65 +294,6 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUse
         return badgedImage
     }
     
-    // MARK: - UNUserNotificationCenterDelegate
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        // Show notifications even when app is in foreground
-        if #available(macOS 11.0, *) {
-            completionHandler([.banner, .sound, .badge])
-        } else {
-            completionHandler([.alert, .sound, .badge])
-        }
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        let userInfo = response.notification.request.content.userInfo
-
-        switch response.actionIdentifier {
-        case "OPEN_PR":
-            // Open the PR in browser
-            if let prURL = userInfo["prURL"] as? String,
-               let url = URL(string: prURL) {
-                NSWorkspace.shared.open(url)
-                print("🔗 Opened PR: \(userInfo["prTitle"] ?? "Unknown")")
-            }
-
-        case "SNOOZE_PR":
-            // Snooze this PR for 1 hour
-            if let prID = userInfo["prID"] as? Int {
-                self.snoozedReviews.insert(prID)
-                print("😴 Snoozed PR #\(userInfo["prNumber"] ?? 0) for 1 hour")
-
-                // Set up timer to remove snooze after 1 hour
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3600) {
-                    self.snoozedReviews.remove(prID)
-                    print("⏰ Snooze expired for PR #\(userInfo["prNumber"] ?? 0)")
-                }
-
-                // Update UI immediately
-                DispatchQueue.main.async {
-                    self.updateStatusItemAppearance()
-                    self.updateMenu()
-                }
-            }
-
-        case UNNotificationDefaultActionIdentifier:
-            // Default tap action - open PR
-            if let prURL = userInfo["prURL"] as? String,
-               let url = URL(string: prURL) {
-                NSWorkspace.shared.open(url)
-                print("🔗 Opened PR via default action: \(userInfo["prTitle"] ?? "Unknown")")
-            }
-
-        case UNNotificationDismissActionIdentifier:
-            // User dismissed notification
-            print("📪 Notification dismissed for PR: \(userInfo["prTitle"] ?? "Unknown")")
-
-        default:
-            print("⚠️ Unknown notification action: \(response.actionIdentifier)")
-        }
-
-        completionHandler()
-    }
     
     // MARK: - SettingsDelegate
     func tokenDidChange() {
@@ -553,8 +301,4 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, UNUse
         checkForPendingReviews()
     }
     
-    func notificationsDidChange(_ enabled: Bool) {
-        print("🔔 Notifications setting changed: \(enabled)")
-        notificationsEnabled = enabled
-    }
 }
