@@ -1,0 +1,22 @@
+{
+  "": {
+    "dependencies": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight.d",
+    "object": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight.o",
+    "swift-dependencies": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/master.swiftdeps"
+  },
+  "/Users/adam/source/PRReviewLight/GitHubService.swift": {
+    "object": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/GitHubService.swift.o",
+    "swiftmodule": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/GitHubService~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/GitHubService.swiftdeps"
+  },
+  "/Users/adam/source/PRReviewLight/PRReviewLight.swift": {
+    "object": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight.swift.o",
+    "swiftmodule": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight.swiftdeps"
+  },
+  "/Users/adam/source/PRReviewLight/SettingsWindow.swift": {
+    "object": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/SettingsWindow.swift.o",
+    "swiftmodule": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/SettingsWindow~partial.swiftmodule",
+    "swift-dependencies": "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/SettingsWindow.swiftdeps"
+  }
+}

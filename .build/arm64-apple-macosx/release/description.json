@@ -1,0 +1,237 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.PRReviewLight-arm64-apple-macosx15.0-release.module" : {
+      "executable" : "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "fileList" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/sources",
+      "importPath" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/GitHubService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/PRReviewLight.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/SettingsWindow.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "PRReviewLight",
+      "moduleOutputPath" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/Modules/PRReviewLight.swiftmodule",
+      "objects" : [
+        "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/GitHubService.swift.o",
+        "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight.swift.o",
+        "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/SettingsWindow.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx13.0",
+        "-O",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-module-cache-path",
+        "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "PRReviewLight_main",
+        "-swift-version",
+        "5",
+        "-F",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-sdk",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "prreviewlight"
+      ],
+      "outputFileMapPath" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/GitHubService.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/SettingsWindow.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/Modules/PRReviewLight.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/adam/source/PRReviewLight/GitHubService.swift",
+        "/Users/adam/source/PRReviewLight/PRReviewLight.swift",
+        "/Users/adam/source/PRReviewLight/SettingsWindow.swift"
+      ],
+      "tempsPath" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build",
+      "wholeModuleOptimization" : true
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "PRReviewLight" : [
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "-module-name",
+      "PRReviewLight",
+      "-package-name",
+      "prreviewlight",
+      "-whole-module-optimization",
+      "-num-threads",
+      "10",
+      "-c",
+      "/Users/adam/source/PRReviewLight/GitHubService.swift",
+      "/Users/adam/source/PRReviewLight/PRReviewLight.swift",
+      "/Users/adam/source/PRReviewLight/SettingsWindow.swift",
+      "-I",
+      "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx13.0",
+      "-O",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-module-cache-path",
+      "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "PRReviewLight_main",
+      "-swift-version",
+      "5",
+      "-F",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-sdk",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "prreviewlight",
+      "-driver-use-frontend-path",
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "PRReviewLight" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "writeCommands" : {
+    "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/GitHubService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/PRReviewLight.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/SettingsWindow.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/sources"
+    },
+    "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/GitHubService.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/PRReviewLight.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.build/SettingsWindow.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/PRReviewLight.product/Objects.LinkFileList"
+    },
+    "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/adam/source/PRReviewLight/.build/arm64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt"
+    }
+  }
+}
