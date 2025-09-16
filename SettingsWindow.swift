@@ -67,9 +67,9 @@ class SettingsWindow: NSObject, NSTextFieldDelegate {
     }
     
     private func setupWindow() {
-        // Create a smaller, more focused window
+        // Create a window with space for detailed instructions
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 280),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 340),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -96,18 +96,49 @@ class SettingsWindow: NSObject, NSTextFieldDelegate {
         contentView.addSubview(headerLabel)
         yPos -= 32
 
-        // Instructions with better formatting
-        let instructions = """
-        Enter your GitHub Personal Access Token to monitor PR reviews.
-
-        Required permissions: repo • read:user
-        """
+        // Brief instructions
+        let instructions = "Enter your GitHub Personal Access Token to monitor PR reviews."
         let instructionsLabel = NSTextField(wrappingLabelWithString: instructions)
         instructionsLabel.font = NSFont.systemFont(ofSize: 13)
         instructionsLabel.textColor = .secondaryLabelColor
-        instructionsLabel.frame = NSRect(x: margin, y: yPos - 44, width: contentView.bounds.width - (margin * 2), height: 44)
+        instructionsLabel.frame = NSRect(x: margin, y: yPos - 16, width: contentView.bounds.width - (margin * 2), height: 16)
         contentView.addSubview(instructionsLabel)
-        yPos -= 60
+        yPos -= 28
+
+        // Required permissions section
+        let permissionsLabel = NSTextField(labelWithString: "Required Permissions:")
+        permissionsLabel.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        permissionsLabel.frame = NSRect(x: margin, y: yPos - 16, width: 200, height: 16)
+        contentView.addSubview(permissionsLabel)
+        yPos -= 24
+
+        // Permission 1: repo
+        let repoLabel = NSTextField(labelWithString: "✓ repo")
+        repoLabel.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        repoLabel.textColor = .systemGreen
+        repoLabel.frame = NSRect(x: margin + 8, y: yPos - 14, width: 60, height: 14)
+        contentView.addSubview(repoLabel)
+
+        let repoDesc = NSTextField(labelWithString: "Full control of private repositories")
+        repoDesc.font = NSFont.systemFont(ofSize: 12)
+        repoDesc.textColor = .secondaryLabelColor
+        repoDesc.frame = NSRect(x: margin + 70, y: yPos - 14, width: 300, height: 14)
+        contentView.addSubview(repoDesc)
+        yPos -= 20
+
+        // Permission 2: read:user
+        let userLabel = NSTextField(labelWithString: "✓ read:user")
+        userLabel.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        userLabel.textColor = .systemGreen
+        userLabel.frame = NSRect(x: margin + 8, y: yPos - 14, width: 80, height: 14)
+        contentView.addSubview(userLabel)
+
+        let userDesc = NSTextField(labelWithString: "Read access to profile info")
+        userDesc.font = NSFont.systemFont(ofSize: 12)
+        userDesc.textColor = .secondaryLabelColor
+        userDesc.frame = NSRect(x: margin + 90, y: yPos - 14, width: 300, height: 14)
+        contentView.addSubview(userDesc)
+        yPos -= 32
 
         // Token input section
         let tokenLabel = NSTextField(labelWithString: "Personal Access Token")

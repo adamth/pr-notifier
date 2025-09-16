@@ -32,8 +32,9 @@ RESOURCES_DIR="$CONTENTS_DIR/Resources"
 mkdir -p "$MACOS_DIR"
 mkdir -p "$RESOURCES_DIR"
 
-# Copy binary
+# Copy and strip binary
 cp .build/release/PRReviewLight "$MACOS_DIR/"
+strip "$MACOS_DIR/PRReviewLight"
 chmod +x "$MACOS_DIR/PRReviewLight"
 
 # Copy app icon if it exists
@@ -93,9 +94,9 @@ DMG_NAME="PRReviewLight-v1.0"
 TEMP_DMG="temp-${DMG_NAME}.dmg"
 FINAL_DMG="${DMG_NAME}.dmg"
 
-# Calculate size and create DMG
+# Calculate size and create DMG (with minimal buffer)
 APP_SIZE=$(du -sm "$APP_DIR" | cut -f1)
-DMG_SIZE=$((APP_SIZE + 15))
+DMG_SIZE=$((APP_SIZE + 2))  # Reduced from 15MB to 2MB buffer
 
 hdiutil create -size ${DMG_SIZE}m -fs HFS+ -volname "PR Review Light" "$TEMP_DMG"
 hdiutil attach "$TEMP_DMG" -mountpoint "/Volumes/PR Review Light"
