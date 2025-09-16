@@ -6,10 +6,14 @@ struct PullRequest: Codable {
     let htmlURL: String
     let user: User
     let number: Int
-    
+    let additions: Int?
+    let deletions: Int?
+    let changedFiles: Int?
+
     enum CodingKeys: String, CodingKey {
-        case id, title, user, number
+        case id, title, user, number, additions, deletions
         case htmlURL = "html_url"
+        case changedFiles = "changed_files"
     }
     
     struct User: Codable {
@@ -124,7 +128,19 @@ class GitHubService {
 
             let searchResult = try JSONDecoder().decode(GitHubSearchResult.self, from: data)
             print("📊 Decoded \(searchResult.items.count) pull requests from GitHub API")
-            return searchResult.items
+
+            // Fetch detailed info for each PR to get line changes
+            var detailedPRs: [PullRequest] = []
+            for pr in searchResult.items {
+                if let detailedPR = await fetchDetailedPR(pr: pr) {
+                    detailedPRs.append(detailedPR)
+                } else {
+                    // If we can't get detailed info, use the original PR
+                    detailedPRs.append(pr)
+                }
+            }
+
+            return detailedPRs
 
         } catch let decodingError as DecodingError {
             print("❌ Failed to decode GitHub API response: \(decodingError.localizedDescription)")
@@ -132,6 +148,41 @@ class GitHubService {
         } catch {
             print("❌ Network error connecting to GitHub: \(error.localizedDescription)")
             return []
+        }
+    }
+
+    private func fetchDetailedPR(pr: PullRequest) async -> PullRequest? {
+        guard let token = token else {
+            return nil
+        }
+
+        // Extract repo info from the PR's HTML URL
+        // URL format: https://github.com/owner/repo/pull/123
+        let urlComponents = pr.htmlURL.components(separatedBy: "/")
+        guard urlComponents.count >= 5,
+              urlComponents[2] == "github.com",
+              let owner = urlComponents.dropFirst(3).first,
+              let repo = urlComponents.dropFirst(4).first else {
+            print("❌ Could not parse repo info from URL: \(pr.htmlURL)")
+            return nil
+        }
+
+        guard let url = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/pulls/\(pr.number)") else {
+            return nil
+        }
+
+        var request = URLRequest(url: url)
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let detailedPR = try JSONDecoder().decode(PullRequest.self, from: data)
+            print("📈 Fetched detailed info for PR #\(pr.number): +\(detailedPR.additions ?? 0)/-\(detailedPR.deletions ?? 0)")
+            return detailedPR
+        } catch {
+            print("❌ Failed to fetch detailed PR info for #\(pr.number): \(error.localizedDescription)")
+            return nil
         }
     }
 

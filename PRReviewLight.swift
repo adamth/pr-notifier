@@ -160,8 +160,20 @@ class PRReviewLightApp: NSObject, NSApplicationDelegate, SettingsDelegate, @unch
             
             for pr in pendingReviews {
                 let isSnoozed = snoozedReviews.contains(pr.id)
-                let title = isSnoozed ? "💤 \(pr.title)" : "🔍 \(pr.title)"
-                
+
+                // Show line changes if available, otherwise just show the title
+                let title: String
+                if let additions = pr.additions, let deletions = pr.deletions {
+                    let formatter = NumberFormatter()
+                    formatter.numberStyle = .decimal
+                    let additionsStr = formatter.string(from: NSNumber(value: additions)) ?? "\(additions)"
+                    let deletionsStr = formatter.string(from: NSNumber(value: deletions)) ?? "\(deletions)"
+                    let changes = "+\(additionsStr)/-\(deletionsStr)"
+                    title = isSnoozed ? "💤 \(pr.title) (\(changes))" : "🔍 \(pr.title) (\(changes))"
+                } else {
+                    title = isSnoozed ? "💤 \(pr.title)" : "🔍 \(pr.title)"
+                }
+
                 let prItem = NSMenuItem(title: title, action: #selector(openPR(_:)), keyEquivalent: "")
                 prItem.representedObject = pr
                 prItem.target = self
